@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1554694495988.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2418159024",
+    "id" : "B368E364",
+    "lastKnownWriteTime" : 1554826587,
+    "last_content_update" : 1554826587950,
+    "path" : "~/Google Drive/QUEST/DATA ANALYSIS/marketing-efficiency/linear_reg_model.R",
+    "project_path" : "linear_reg_model.R",
+    "properties" : {
+        "cursorPosition" : "92,0",
+        "scrollLine" : "76",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

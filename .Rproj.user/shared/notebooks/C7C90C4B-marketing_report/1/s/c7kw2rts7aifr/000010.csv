@@ -1,0 +1,35 @@
+"1","
+Training data contained "
+"1","439"
+"1"," data points and "
+"1","no missing data.
+"
+"1","
+Operations:
+
+"
+"1","Factor variables from "
+"1","MarketSize"
+"1"," [trained]
+"
+"1","Dummy variables from "
+"1","Promotion_factor, Week_factor"
+"1"," [trained]
+"
+"1","Dummy variables from "
+"1","AgeOfStore"
+"1"," [trained]
+"
+"0","train_tbl <- bake(recipe_obj, new_data = train)"
+"0","test_tbl  <- bake(recipe_obj, new_data = test)"
+"0","# 3.1 LINEAR REGRESSION - NO ENGINEERED FEATURES ----"
+"0","# 3.1.1 Model ----"
+"0","model_01_linear_lm_simple <- linear_reg(mode = ""regression"") %>%"
+"0","  set_engine(""lm"") %>%"
+"0","  fit(SalesInThousands ~ ., data = train_tbl)"
+"0","model_01_linear_lm_simple %>% "
+"0","  predict(new_data = test_tbl) %>%"
+"0","  "
+"0","  bind_cols(test_tbl %>% select(SalesInThousands)) %>%"
+"0","  yardstick::metrics(truth = SalesInThousands, estimate = .pred)"
+"2","prediction from a rank-deficient fit may be misleading"

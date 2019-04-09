@@ -1,0 +1,13 @@
+"0","recipe_obj <- recipe(SalesInThousands ~ ., data = train) %>%"
+"0","  step_string2factor(MarketSize) %>%"
+"0","  step_dummy(Promotion_factor, Week_factor, one_hot = TRUE) %>% "
+"0","  #step_range(AgeOfStore) %>% "
+"0","  step_discretize(AgeOfStore, options = list(min_unique = 1)) %>% "
+"0","  prep(data = train)"
+"0","recipe_obj"
+"1","Data Recipe
+
+"
+"1","Inputs:
+
+"

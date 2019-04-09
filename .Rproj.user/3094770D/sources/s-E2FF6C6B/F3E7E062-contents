@@ -1,0 +1,78 @@
+library(tidyverse)
+library(shiny)
+canada <- read_csv("data/02820101-eng.csv")
+library(lubridate)
+library(stringr)
+library(readr)
+canada <- read_csv("~/Google Drive/QUEST/DATA ANALYSIS/datasets/14100082-eng/14100082.csv")
+View(canada)
+immigrationClean <- 
+  canada %>%
+  select(-(Vector:Coordinate),
+         -`Geographical classification`) 
+
+provinces <- c("Alberta",
+               "Vancouver, British Columbia",
+               "Toronto, Ontario",
+               "Manitoba",
+               "Montreal, Quebec",
+               "Nova Scotia")
+
+status <- c("Born in Canada",
+            "Immigrants, landed 5 or less years earlier",
+            "Immigrants, landed more than 10 years earlier",
+            "Immigrants, landed more than 5 to 10 years earlier")
+
+employ <- c("Unemployment rate")
+
+# process data into a new dataset:
+province <- immigrationClean %>% 
+  filter(GEO %in% provinces,
+         CHARACTERISTICS %in% employ,
+         STATUS %in% status) %>% 
+  mutate(Date = ymd(paste0(Ref_Date, "/01"))) %>%
+  select(Date,
+         provinces = GEO,
+         Value,
+         AGEGROUP,
+         CHARACTERISTICS,
+         STATUS)
+
+provinceArea <- province %>% 
+  mutate(Year = year(Date)) %>% 
+  group_by(Year, STATUS, provinces) %>% 
+  filter(!is.na(Value)) %>% 
+  summarise_each(funs(mean), Value)
+
+
+immigrationClean <- 
+  canada %>%
+  select(-(Vector:Coordinate),
+         -`Geographical classification`) 
+
+provinces <- c("Alberta",
+               "Vancouver, British Columbia",
+               "Toronto, Ontario",
+               "Manitoba",
+               "Montreal, Quebec",
+               "Nova Scotia")
+
+status <- c("Born in Canada",
+            "Immigrants, landed 5 or less years earlier",
+            "Immigrants, landed more than 10 years earlier",
+            "Immigrants, landed more than 5 to 10 years earlier")
+
+employ <- c("Unemployment rate")
+
+# process data into a new dataset:
+province <- immigrationClean %>% 
+  filter(GEO %in% provinces,
+         CHARACTERISTICS %in% employ,
+         STATUS %in% status) %>% 
+  mutate(Date = ymd(paste0(Ref_Date, "/01"))) %>%
+  select(Date,
+         provinces = GEO,
+         Value,
+         AGEGROUP,
+         CHARACTERISTICS,
+         STATUS) 

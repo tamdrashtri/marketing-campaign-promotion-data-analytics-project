@@ -1,0 +1,160 @@
+---
+title: ""
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    highlight: kate
+---
+
+
+```{r knitr_init, echo=FALSE, cache=FALSE}
+library(knitr)
+library(rmdformats)
+
+## Global options
+options(max.print="75")
+opts_chunk$set(echo=FALSE,
+	             cache=TRUE,
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+```
+
+```{r setup}
+knitr::opts_chunk$set(include = FALSE)
+marketing <- read_csv("WA_Fn-UseC_-Marketing-Campaign-Eff-UseC_-FastF.csv", 
+                      col_types = cols(MarketID = col_skip()))
+
+library(simpleSetup)
+
+# Load packages, install if needed
+packages <- c('tidyverse',
+              'readr',
+              'skimr',
+              "recipes",
+              "magrittr",
+              "corrr",
+              "h2o",
+              "rsample",
+              "viridis",
+              "caret",
+              "parsnip")
+library_install(packages)
+```
+
+Quickly analyze test market campaigns based on responses, revenue and other key metrics. Predict who will respond to which campaign by which channel and why. Increase the likelihood of responses and quality of leads in future campaigns.
+
+## The description of the data set
+
+Our data set consists of 548 entries including:
+
+* Age of stores: the mean age of a store is 8.5 years.
+* LocationID: Each location is identified by a number. The total number of stores are 137.
+* Promotion: there are three types of promotion. We don't really know the specifics of each promotion.
+* Sales in Thousands: the mean number of sales are 53.5 thousands dollars.
+* Market size: there are two types of market size: small and medium.
+* Week: there are four weeks.
+
+All of these variables are beneficial for our modeling process. We will set sales in thousands as our target variable and analyze to see what variables contribute the most to sales.
+
+
+## Feature engineering
+
+To make our modeling process more efficient, we need to transform the data into appropiate formats. Here we outline some of the transformation steps:
+
+1. Week is now a numeric variable and can be dummied into 4 columns, each column represents one week.
+2. Promotion is also a numeric variable and needed to be dummied into columns for each type of promotion.
+3. Age of Stores has many numbers and can be grouped into 4 bins, bin 1 contains stores with younger ages and bin 4 contains stores with older ages.
+
+(how can we deal with locations?)
+
+
+```{r split, include=FALSE}
+
+
+
+# Feature engineering
+# 1. week can be categorized into 4, as categorical data
+# 2. promotion turns into 3 categories too
+# 3. how many locationID are there: 137 stores
+
+marketing %>% 
+  group_by(LocationID) %>% 
+  summarise(sales = sum(SalesInThousands)) 
+
+
+marketing_trnformed <- marketing %>%
+  mutate(
+    Promotion = as.character(Promotion),
+    Promotion_factor = as_factor(Promotion),
+    week = as.character(week),
+    Week_factor = as_factor(week)
+  ) %>% 
+  select(-c("week", "Promotion", "LocationID"))
+
+marketing_trnformed %>% glimpse() %>% skim() 
+
+set.seed(3456)
+split_obj <- rsample::initial_split(marketing_trnformed, prop = 0.80)
+
+split_obj %>% training()
+
+split_obj %>% testing() 
+
+train <- training(split_obj)
+test  <- testing(split_obj)
+
+
+recipe_obj <- recipe(SalesInThousands ~ ., data = train) %>%
+  step_string2factor(MarketSize) %>%
+  step_dummy(Promotion_factor, Week_factor, one_hot = TRUE) %>% 
+  step_discretize(AgeOfStore, options = list(min_unique = 1)) %>% 
+  prep(data = train)
+
+recipe_obj
+
+
+train_tbl <- bake(recipe_obj, new_data = train)
+test_tbl  <- bake(recipe_obj, new_data = test)
+
+```
+
+
+```{r model, echo=FALSE}
+# 3.1 LINEAR REGRESSION - NO ENGINEERED FEATURES ----
+
+# 3.1.1 Model ----
+
+model_01_linear_lm_simple <- linear_reg(mode = "regression") %>%
+  set_engine("lm") %>%
+  fit(SalesInThousands ~ ., data = train_tbl)
+
+model_01_linear_lm_simple %>% 
+  predict(new_data = test_tbl) %>%
+  
+  bind_cols(test_tbl %>% select(SalesInThousands)) %>%
+  yardstick::metrics(truth = SalesInThousands, estimate = .pred)
+
+
+model_01_linear_lm_simple$fit %>%
+  broom::tidy() %>%
+  arrange(p.value) %>%
+  mutate(term = as_factor(term) %>% fct_rev()) %>%
+  
+  ggplot(aes(x = estimate, y = term)) +
+  geom_point() +
+  ggrepel::geom_label_repel(aes(label = scales::dollar(estimate, accuracy = 1)),
+                            size = 3) +
+  scale_x_continuous(labels = scales::dollar_format()) +
+  labs(title = "Linear Regression: Feature Importance",
+       subtitle = "Looks like no factor contributes to increases in sales") +
+  theme_bw()
+```
+
+## Conclusion
+
+The model predicts that there is no variables contributing to increases in sales except week 1 with one thousands increase in sales. Other variables such as market size and promotion factors are both not having efficiency in increasing sales but actually decreasing it. 
+
